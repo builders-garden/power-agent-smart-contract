@@ -14,6 +14,10 @@ contract PowerAgentsOApp is OApp, OAppOptionsType3 {
     /// @dev These values are used in things like combineOptions() in OAppOptionsType3 (enforcedOptions).
     uint16 public constant SEND = 1;
 
+    bool public initialized;
+
+    address public factoryAdmin;
+
     /// @notice Emitted when a message is received from another chain.
     event MessageReceived(bytes message, uint32 senderEid, bytes32 sender);
 
@@ -23,12 +27,30 @@ contract PowerAgentsOApp is OApp, OAppOptionsType3 {
     /// @dev Revert with this error when an invalid message type is used.
     error InvalidMsgType();
 
+    error AlreadyInitialized();
+    error OnlyFactoryAdmin();
+
+    modifier onlyFactoryAdmin() {
+        if (msg.sender != factoryAdmin) revert OnlyFactoryAdmin();
+        _;
+    }
+
     /**
      * @dev Constructs a new BatchSend contract instance.
      * @param _endpoint The LayerZero endpoint for this contract to interact with.
      * @param _owner The owner address that will be set as the owner of the contract.
      */
-    constructor(address _endpoint, address _owner) OApp(_endpoint, _owner) Ownable(_owner) {}
+    constructor(address _endpoint, address _owner, address _factoryAdmin) OApp(_endpoint, _owner) Ownable(_owner) {
+        factoryAdmin = _factoryAdmin;
+    }
+
+    function init(uint32 _eid, bytes32 _peer) external onlyFactoryAdmin {
+        if (initialized) revert AlreadyInitialized();
+        initialized = true;
+        _setPeer(_eid, _peer);
+    }
+
+    receive() external payable {}
 
     function _payNative(uint256 _nativeFee) internal override returns (uint256 nativeFee) {
         if (msg.value < _nativeFee) revert NotEnoughNative(msg.value);
