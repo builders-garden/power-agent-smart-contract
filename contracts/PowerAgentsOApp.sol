@@ -14,8 +14,6 @@ contract PowerAgentsOApp is OApp, OAppOptionsType3 {
     /// @dev These values are used in things like combineOptions() in OAppOptionsType3 (enforcedOptions).
     uint16 public constant SEND = 1;
 
-    bool public initialized;
-
     address public factoryAdmin;
 
     /// @notice Emitted when a message is received from another chain.
@@ -45,8 +43,6 @@ contract PowerAgentsOApp is OApp, OAppOptionsType3 {
     }
 
     function init(uint32 _eid, bytes32 _peer) external onlyFactoryAdmin {
-        if (initialized) revert AlreadyInitialized();
-        initialized = true;
         _setPeer(_eid, _peer);
     }
 
